@@ -1,0 +1,8 @@
+*.xml
+*.txt
+*.csv
+*.py
+*.npy
+Convolved Data/
+.DS_Store
+.ipynb_checkpoints/
