@@ -10,4 +10,5 @@ This pipeline currently looks into four aspects of the spectrum:-
 - Stellar Photosphere
 
 ## Viscously heated disk:-
-This is the most important part of the spectrum as it is the dominant component to contributes to the flux. 
+This is the most important part of the spectrum as it is the dominant component contributing to the flux. 
+Most of the 
