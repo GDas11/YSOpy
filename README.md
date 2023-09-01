@@ -22,5 +22,10 @@ Finally we are having a function named ```generate_visc_flux()``` which is ultim
 ## Magnetospheric accretion
 For this component we are making use of 3 files ```base_funcs.py```, ```h_emission_refac.py``` and ```H-gen_file.py```.
 As the names suggest we are generating the grids for H component and H- component of slab model using ```h_emission_refac.py``` and ```H-gen_file.py``` respectively.
-Now using these grids we are using the function ```magnetospheric_component()``` in ```base_funcs.py``` and calculating the total flux due to this component.
+Now using these grids we are using the function```cos_gamma_func()``` and ```magnetospheric_component()``` in ```base_funcs.py``` we are calculating the total flux due to this component.
 
+## Dusty Disk
+We are using two functions in ```base_funcs.py``` namely ```t_eff_dust()``` and ```generate_dusty_disk_flux()``` to get the dusty component of radiation.
+
+## Stellar Photosphere
+We are using ```generate_photosphere_flux()``` from ```base_funcs.py``` to generate the stellar photoshpheric flux.
