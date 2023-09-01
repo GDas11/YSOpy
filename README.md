@@ -5,8 +5,8 @@ This Python package is currently in the DEVELOPMENTAL STAGE.
 We are currently working on bringing a new Python package to study and characterise the spectrum of young stellar objects (YSOs).
 This pipeline currently looks into four aspects of the spectrum:-
 - Viscously Heated Disk
-- Dusty Disk
 - Magnetospheric Accretion
+- Dusty Disk
 - Stellar Photosphere
 
 ## Viscously heated disk:-
@@ -17,3 +17,10 @@ Then we use ```read_bt_settl()``` to extract the flux data from the BT-Settl Mod
 In our calculations the data generated is not evenly distributed across all wavelengths hence we have to interpolate them in certain ways which we accomplish by using three different interpolation functions namely ```unif_reinterpolate()```, ```interpolate_conv()``` and ```logspace_reinterp()```.
 Now in order to capture the rotational broadening of the disk we have to convolve the flux values with a kernel. we define and implement the kernel in ```ker()``` and ```generate_kernel``` respectively.
 Finally we are having a function named ```generate_visc_flux()``` which is ultimately generating the convolved flux of the viscous disk.
+
+
+## Magnetospheric accretion
+For this component we are making use of 3 files ```base_funcs.py```, ```h_emission_refac.py``` and ```H-gen_file.py```.
+As the names suggest we are generating the grids for H component and H- component of slab model using ```h_emission_refac.py``` and ```H-gen_file.py``` respectively.
+Now using these grids we are using the function ```magnetospheric_component()``` in ```base_funcs.py``` and calculating the total flux due to this component.
+
