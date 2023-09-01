@@ -11,4 +11,6 @@ This pipeline currently looks into four aspects of the spectrum:-
 
 ## Viscously heated disk:-
 This is the most important part of the spectrum as it is the dominant component contributing to the flux. 
-Most of the 
+Most of the functions required for this component are in base_funcs.py.
+First we have to generate the temperature distribution with change in radius which is done by temp_visc and generate_temp_arr.
+
