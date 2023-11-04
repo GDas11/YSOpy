@@ -16,6 +16,7 @@ from configparser import ConfigParser
 import argparse
 import time
 
+
 def config_read(path):
     """Read data from config file and cast to expected data types
 
@@ -134,12 +135,12 @@ def read_bt_settl(config, temperature: int, logg: float, r_in=None):
     # extra region left for re-interpolation
     l_pad = 20
     if r_in is not None:
-        v_max = np.sqrt(const.G.value * m.value/r_in.value) * np.sin(inclination) / const.c.value
+        v_max = np.sqrt(const.G.value * m.value / r_in.value) * np.sin(inclination) / const.c.value
         l_pad = l_max.value * v_max
         # print(l_pad)
 
-    trimmed_data = np.extract(data['WAVELENGTH'] > l_min.value - 1.5*l_pad, data)
-    trimmed_data = np.extract(trimmed_data['WAVELENGTH'] < l_max.value + 1.5*l_pad, trimmed_data)
+    trimmed_data = np.extract(data['WAVELENGTH'] > l_min.value - 1.5 * l_pad, data)
+    trimmed_data = np.extract(trimmed_data['WAVELENGTH'] < l_max.value + 1.5 * l_pad, trimmed_data)
     trimmed_wave = trimmed_data['WAVELENGTH'].astype(np.float64) * u.AA
     trimmed_flux = trimmed_data['FLUX'].astype(np.float64) * (u.erg / (u.cm * u.cm * u.s * u.AA))
 
@@ -176,7 +177,7 @@ def unif_reinterpolate(config, x, y, l_pad):
     l_max = config['l_max']
     n_data = config['n_data']
     f = interp1d(x, y)
-    wav = np.linspace(l_min.value - 1.2*l_pad, l_max.value + 1.2*l_pad, n_data, endpoint=True) * u.AA
+    wav = np.linspace(l_min.value - 1.2 * l_pad, l_max.value + 1.2 * l_pad, n_data, endpoint=True) * u.AA
     return wav, (f(wav) * u.erg / (u.cm * u.cm * u.s * u.AA))
 
 
@@ -368,7 +369,7 @@ def generate_temp_arr(config):  # ask if len r will be user defined
     m_dot = config['m_dot']
     n_disk = config['n_disk']
     b = config["b"]
-    r_in = 7.186 * (b/(1*u.kG)) ** (4/7) * (r_star / (2 * const.R_sun)) ** (5 / 7) / (
+    r_in = 7.186 * (b / (1 * u.kG)) ** (4 / 7) * (r_star / (2 * const.R_sun)) ** (5 / 7) / (
             (m_dot / (1e-8 * m_sun_yr)) ** (2 / 7) * (m / (0.5 * const.M_sun)) ** (1 / 7)) * r_star
     r_in = r_in / 2.0  # correction factor taken 0.5, ref Long, Romanova, Lovelace 2005
     print(r_in)
@@ -397,7 +398,7 @@ def generate_temp_arr(config):  # ask if len r will be user defined
         elif 120 >= t_int > 70 and t_int % 2 == 1:  # As per temperatures in BT-Settl data
             d[r_visc[i].value] = int(
                 np.round(t_visc[i].value / 200)) * 2
-        elif 120 < t_int: # and t_int % 5 != 0:
+        elif 120 < t_int:  # and t_int % 5 != 0:
             d[r_visc[i].value] = int(
                 np.round(t_visc[i].value / 500)) * 5
     temp_arr = []
@@ -420,6 +421,7 @@ def generate_temp_arr(config):  # ask if len r will be user defined
         plt.show()
     return dr, t_max, d, r_in, r_sub
 
+
 def generate_temp_arr_planet(config, mass_p, dist_p, d):
     # mass and distance of planet fix such that it is within the viscous disk
     r_visc = np.array([radius for radius, t in d.items()]) * u.m
@@ -428,8 +430,9 @@ def generate_temp_arr_planet(config, mass_p, dist_p, d):
     dist_plnt = dist_p * u.AU
     m = config["m"]
     # Distance of star to L1 from star
-    low_plnt_lim = (dist_plnt.to(u.m) * np.sqrt(m.to(u.kg))) / (np.sqrt(m.to(u.kg)) + np.sqrt(mass_plnt.to(u.kg)))
-    up_plnt_lim = (dist_plnt.to(u.m) * np.sqrt(m.to(u.kg))) / (np.sqrt(m.to(u.kg)) - np.sqrt(mass_plnt.to(u.kg)))
+
+    low_plnt_lim = dist_plnt * (1 - np.sqrt(mass_plnt / (3 * m)))
+    up_plnt_lim = dist_plnt * (1 + np.sqrt(mass_plnt / (3 * m)))
     print("Check this ******************")
     print('Position of L1: ', low_plnt_lim.to(u.AU))
     print('Position of L2: ', up_plnt_lim.to(u.AU))
@@ -465,8 +468,8 @@ def generate_temp_arr_planet(config, mass_p, dist_p, d):
     # temp_arr = np.array(temp_arr) * u.Kelvin
     t_visc = np.array(t_visc) * u.Kelvin
     # print(temp_arr, len(temp_arr))
-    #plt.plot(r_visc.to(u.AU), t_visc)
-    #plt.show()
+    # plt.plot(r_visc.to(u.AU), t_visc)
+    # plt.show()
     d_new = {}
     for i in range(len(r_visc)):
         t_int = int(np.round(t_visc[i].value))
@@ -475,11 +478,10 @@ def generate_temp_arr_planet(config, mass_p, dist_p, d):
         elif 120 >= t_int > 70 and t_int % 2 == 1:  # As per temperatures in BT-Settl data
             d_new[r_visc[i].value] = int(
                 np.round(t_visc[i].value)) * 2
-        elif 120 < t_int: # and t_int % 5 != 0:
+        elif 120 < t_int:  # and t_int % 5 != 0:
             d_new[r_visc[i].value] = int(
                 np.round(t_visc[i].value)) * 5
     return r_visc, t_visc, d_new  # , temp_arr
-
 
 
 def generate_visc_flux(config, d: dict, t_max, dr, r_in=None):
@@ -670,7 +672,7 @@ def magnetospheric_component(config, r_in):
 
     elif config['mag_comp'] == 'blackbody':
         l_mag = const.G * m * m_dot * (1 / r_star - 1 / r_in)
-        area_shock = l_mag / (const.sigma_sb * (8000.0 * u.K) ** 4) # t_slab define correctly
+        area_shock = l_mag / (const.sigma_sb * (8000.0 * u.K) ** 4)  # t_slab define correctly
     else:
         raise ValueError("Only accepted magnetosphere models are \'blackbody\' and \'hslab\'")
 
@@ -972,7 +974,7 @@ def contribution(raw_args=None):
                 cumulative_flux += y_final
 
                 if flag % 50 == 0:
-                    arr.append(np.log10(cumulative_flux.copy().value*2*np.pi*r.value))
+                    arr.append(np.log10(cumulative_flux.copy().value * 2 * np.pi * r.value))
                     z_val.append(r.value.copy())
                 flag += 1
             temp_flux += y_final * np.pi * (2 * r * dr + dr ** 2)
@@ -1008,7 +1010,7 @@ def main(raw_args=None):
     # dict_config = config_read("/home/arch/yso/config_file.das")
     dr, t_max, d, r_in, r_sub = generate_temp_arr(dict_config)
     # control line for planetesimal
-    garb1, garb2, d = generate_temp_arr_planet(dict_config, 8, 0.03, d)
+    garb1, garb2, d = generate_temp_arr_planet(dict_config, 2, 0.03, d)
     wavelength, obs_viscous_disk_flux = generate_visc_flux(dict_config, d, t_max, dr)
     print('Viscous disk done')
     obs_mag_flux = magnetospheric_component(dict_config, r_in)
@@ -1021,7 +1023,7 @@ def main(raw_args=None):
                                       obs_dust_flux)
 
     et = time.time()
-    print(f"Total time taken : {et-st}")
+    print(f"Total time taken : {et - st}")
     if dict_config['plot']:
         plt.plot(wavelength, obs_star_flux, label="Stellar photosphere")
         plt.plot(wavelength, total_flux, label="Total")
@@ -1062,12 +1064,12 @@ def new_contribution():
     wav_new = wav_new.compressed()
     print(wav_new)
     print(r_in)
-    print((r_sub/r_in).si)
+    print((r_sub / r_in).si)
 
     for i in range(0, len(r_visc), 7):
         r = r_visc[i]
         flux = np.load(f"{save_loc}/radius_{r}_flux.npy")
-        flux = flux * (u.erg / (u.cm**2 * u.s * u.AA)) * r * dr
+        flux = flux * (u.erg / (u.cm ** 2 * u.s * u.AA)) * r * dr
         # trim to region of interest
         wavelength = np.logspace(np.log10(l_min.value), np.log10(l_max.value), n_data)
         flux = np.extract(wavelength < 25000, flux)
@@ -1075,10 +1077,11 @@ def new_contribution():
         flux = np.extract(wavelength > 10000, flux)
         wavelength = np.extract(wavelength > 10000, wavelength)
         # correct for distance
-        flux *= np.cos(inclination) / (np.pi * d_star**2)
-        flux = flux.to(u.erg / (u.cm**2 * u.s * u.AA))
+        flux *= np.cos(inclination) / (np.pi * d_star ** 2)
+        flux = flux.to(u.erg / (u.cm ** 2 * u.s * u.AA))
 
-        ax.plot(wav_new, np.log10(flux.value) - 0.05*i, label=f"r={np.round(r/const.R_sun,2)} R_sun, T={d[r.value]*100} K")
+        ax.plot(wav_new, np.log10(flux.value) - 0.05 * i,
+                label=f"r={np.round(r / const.R_sun, 2)} R_sun, T={d[r.value] * 100} K")
         arr.append(flux.value)
 
     plt.xlabel("Wavelength [Angstrom]")
@@ -1089,4 +1092,3 @@ def new_contribution():
 
 if __name__ == "__main__":
     main(raw_args=None)
-
