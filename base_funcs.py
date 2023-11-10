@@ -2,7 +2,6 @@ import astropy.units
 import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
-# from mpl_toolkits.mplot3d.axes3d import Axes3D
 from scipy.integrate import dblquad
 from scipy.integrate import trapezoid
 from scipy.interpolate import interp1d
@@ -15,6 +14,7 @@ from dust_extinction.averages import G21_MWAvg
 from configparser import ConfigParser
 import argparse
 import time
+import sys
 
 
 def config_read(path):
@@ -59,6 +59,9 @@ def config_read(path):
     dict_config["n_h"] = int(dict_config["n_h"])
     dict_config["l_l_slab"] = float(dict_config["l_l_slab"]) * u.AA
     dict_config["n_h_minus"] = int(dict_config["n_h_minus"])
+    dict_config["m_planet"] = float(dict_config["m_planet"]) * u.jupiterMass
+    dict_config["n_h_minus"] = int(dict_config["n_h_minus"]) * u.AU
+
 
     if dict_config["save"] == "True":
         dict_config["save"] = True
@@ -78,7 +81,7 @@ def config_read(path):
         dict_config["save_grid_data"] = True
     else:
         dict_config["save_grid_data"] = False
-    # print(dict_config)
+
     if dict_config['save']:
         with open(f"{dict_config['save_loc']}/details.txt", 'a+') as f:
             f.write(str(dict_config))
@@ -120,6 +123,7 @@ def read_bt_settl(config, temperature: int, logg: float, r_in=None):
     l_max = config['l_max']
     n_data = config['n_data']
 
+    # names of the data files
     if temperature >= 100:
         address = f"{loc}/lte{temperature}-{logg}-0.0a+0.0.BT-Settl.7.dat.xml"
     elif (temperature > 25) and temperature < 100:
@@ -133,11 +137,10 @@ def read_bt_settl(config, temperature: int, logg: float, r_in=None):
 
     # trim data to region of interest
     # extra region left for re-interpolation
-    l_pad = 20
+    l_pad = 20  # 20 Angstrom of padding left
     if r_in is not None:
         v_max = np.sqrt(const.G.value * m.value / r_in.value) * np.sin(inclination) / const.c.value
         l_pad = l_max.value * v_max
-        # print(l_pad)
 
     trimmed_data = np.extract(data['WAVELENGTH'] > l_min.value - 1.5 * l_pad, data)
     trimmed_data = np.extract(trimmed_data['WAVELENGTH'] < l_max.value + 1.5 * l_pad, trimmed_data)
@@ -404,7 +407,7 @@ def generate_temp_arr(config):  # ask if len r will be user defined
     temp_arr = []
     for i in r_visc:
         temp_arr.append(d[i.value])
-    temp_arr = np.array(temp_arr)
+    # temp_arr = np.array(temp_arr)
     if len(t_visc) == 0:
         r_sub = r_in
         t_max = 14
@@ -422,66 +425,47 @@ def generate_temp_arr(config):  # ask if len r will be user defined
     return dr, t_max, d, r_in, r_sub
 
 
-def generate_temp_arr_planet(config, mass_p, dist_p, d):
+def generate_temp_arr_planet(config, d:dict):
+    """
+    Calculates the annuli which are to be removed in the presence of a planetesimal
+    Parameters
+    ----------
+    config
+    d
+
+    Returns
+    -------
+    r_visc_new
+    t_visc_new
+    d_new
+    """
+    # assume the planet is small enough that the rest of the gravitational field is not affected
     # mass and distance of planet fix such that it is within the viscous disk
     r_visc = np.array([radius for radius, t in d.items()]) * u.m
-    t_visc = np.array([t for radius, t in d.items()]) * u.Kelvin
-    mass_plnt = mass_p * u.jupiterMass
-    dist_plnt = dist_p * u.AU
+    # t_visc = np.array([t for radius, t in d.items()]) * u.Kelvin
+    mass_plnt = config["m_planet"].si
+    dist_plnt = config["dist_planet"]
     m = config["m"]
     # Distance of star to L1 from star
-
-    low_plnt_lim = dist_plnt * (1 - np.sqrt(mass_plnt / (3 * m)))
-    up_plnt_lim = dist_plnt * (1 + np.sqrt(mass_plnt / (3 * m)))
-    print("Check this ******************")
-    print('Position of L1: ', low_plnt_lim.to(u.AU))
-    print('Position of L2: ', up_plnt_lim.to(u.AU))
+    print(mass_plnt)
+    print("star mass",m)
+    print(mass_plnt/(3*))
+    low_plnt_lim = dist_plnt * (1 - (mass_plnt / (3 * m)).value**(1/3))  # ref Higuchi and Ida 2017
+    up_plnt_lim = dist_plnt * (1 + (mass_plnt / (3 * m)).value**(1/3))
+    print('Position of L1: LOOK HERE', low_plnt_lim)
+    print('Position of L2: ', up_plnt_lim)
     print('Last element of radius array: ', r_visc.to(u.AU)[-1])
-    print("*********************")
     print(f"planet's influence: {low_plnt_lim} to {up_plnt_lim}\n")
-    r_new = []
-    for r in r_visc:
-        if r > low_plnt_lim:
-            if r < up_plnt_lim:
-                r_new.append(r.to(u.AU).value)
-    r_new = np.array(r_new) * u.AU
-
-    terms = np.where(low_plnt_lim < r_visc)
-    terms2 = np.where(up_plnt_lim > r_visc)
-    terms_act = []
-
-    for i in terms[0]:
-        for j in terms2[0]:
-            if i == j:
-                terms_act.append(i)
-    # removing this radius from r_visc
-    for r in r_visc:
-        if r in r_new:
-            r_visc = np.delete(r_visc, np.where(r_visc == r))
-    # print(r_visc.to(u.AU))
-    # print(temp_arr, len(temp_arr))
-    # temp_arr = list(temp_arr.value)
-    t_visc = list(t_visc.value)
-    for i in terms_act:
-        # temp_arr.remove(temp_arr[terms_act[0]])
-        t_visc.remove(t_visc[terms_act[0]])
-    # temp_arr = np.array(temp_arr) * u.Kelvin
-    t_visc = np.array(t_visc) * u.Kelvin
-    # print(temp_arr, len(temp_arr))
-    # plt.plot(r_visc.to(u.AU), t_visc)
-    # plt.show()
     d_new = {}
-    for i in range(len(r_visc)):
-        t_int = int(np.round(t_visc[i].value))
-        if t_int < 71:
-            d_new[r_visc[i].value] = int(np.round(t_visc[i].value))
-        elif 120 >= t_int > 70 and t_int % 2 == 1:  # As per temperatures in BT-Settl data
-            d_new[r_visc[i].value] = int(
-                np.round(t_visc[i].value)) * 2
-        elif 120 < t_int:  # and t_int % 5 != 0:
-            d_new[r_visc[i].value] = int(
-                np.round(t_visc[i].value)) * 5
-    return r_visc, t_visc, d_new  # , temp_arr
+
+    for r in d.keys():
+        if not (low_plnt_lim <= r*u.m <= up_plnt_lim):
+            d_new[r] = d[r]
+
+    r_visc_new = d_new.keys()
+    t_visc_new = d_new.values()
+
+    return r_visc_new, t_visc_new, d_new
 
 
 def generate_visc_flux(config, d: dict, t_max, dr, r_in=None):
@@ -853,7 +837,7 @@ def generate_dusty_disk_flux(config, r_in, r_sub):
 
 
 def dust_extinction_flux(config, wavelength, obs_viscous_disk_flux, obs_star_flux, obs_mag_flux, obs_dust_flux):
-    """Redden the spectra with the Milky Way extinction curves. Ref. Gordon et al. 2021, Fitzpatrick et. al 2019
+    """Redden the spectra with the Milky Way extinction curves. Ref. Gordon et al. 2021, Fitzpatrick et al. 2019
 
     Parameters
     ----------
@@ -1007,10 +991,13 @@ def main(raw_args=None):
     st = time.time()
     args = parse_args(raw_args)
     dict_config = config_read(args.ConfigfileLocation)
-    # dict_config = config_read("/home/arch/yso/config_file.das")
+    trial_func(dict_config)
+    sys.exit(0)
+
     dr, t_max, d, r_in, r_sub = generate_temp_arr(dict_config)
+
     # control line for planetesimal
-    garb1, garb2, d = generate_temp_arr_planet(dict_config, 2, 0.03, d)
+    garb1, garb2, d = generate_temp_arr_planet(dict_config, d)
     wavelength, obs_viscous_disk_flux = generate_visc_flux(dict_config, d, t_max, dr)
     print('Viscous disk done')
     obs_mag_flux = magnetospheric_component(dict_config, r_in)
@@ -1088,6 +1075,31 @@ def new_contribution():
     plt.ylabel("log_10 Flux (+ offset) [erg / cm^2 s A]")
     plt.legend()
     plt.show()
+
+
+def trial_func(config):
+    dr, t_max, d, r_in, r_sub = generate_temp_arr(config)
+    r_visc_nop = np.array([radius for radius, t in d.items()]) * u.m
+    t_visc_nop = np.array([t for radius, t in d.items()]) * u.Kelvin
+
+    r, t1, d_new = generate_temp_arr_planet(config, d)
+    r_visc_p = np.array([radius for radius, t in d_new.items()]) * u.m
+    t_visc_p = np.array([t for radius, t in d_new.items()]) * u.Kelvin
+    # np.save("/Users/tusharkantidas/NIUS/testing/Contribution/T1.npy",t1.value)
+    print('_________-ok___________')
+
+    plt.scatter(r_visc_nop.to(u.AU), t_visc_nop*100, label="Without planetesimal")
+    plt.scatter(r.to(u.AU), t1 * 100, label="With planetesimal", s=5)
+    plt.xlabel("Radius in AU ----->")
+    plt.ylabel("Temperature in K ----->")
+    plt.legend()
+    #plt.savefig("/Users/tusharkantidas/NIUS/testing/Contribution/Temp_dist_with_radius.pdf")
+    plt.show()
+
+    '''
+    m = config["m"]
+    print("mass star", m.to(u.kg))
+    print("mass planet",  (8 * u.jupiterMass).to(u.kg))'''
 
 
 if __name__ == "__main__":

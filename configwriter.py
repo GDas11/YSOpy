@@ -21,18 +21,22 @@ config['Default'] = {
     "n_e": 1e13,
     "tau": 1.0,
     "save": True,
+    "save_each": False,
     "plot": True,
-    "bt_settl_path": r"/Users/tusharkantidas/NIUS/Temp",
-    "save_loc": r"/Users/tusharkantidas/NIUS/testing/yso/Data/test3",
+    "bt_settl_path": r"/home/arch/yso/trial_downloads",
+    "save_loc": r"/home/arch/yso/results/trial_9_11",
     "save_grid_data": True, # saving the grid for H slab
-    "h_grid_loc": r"/Users/tusharkantidas/NIUS/refactoring/grid/h_emission/Sample",
-    "h_min_grid_loc": r"/Users/tusharkantidas/NIUS/refactoring/grid/h_min_emission",
+    "h_grid_path": r"/home/arch/yso/Marvin_gen_dt/Marvin_gen_dt",
+    "h_min_grid_path": r"/home/arch/yso/H_slab_data/GridH-slab/temp_tau_ne",
+    "n_dust_disk": 200,
     "l_min": 3e3,
     "l_max": 5e4,
     "n_data": 420000, # number of points in the wavelength axis
     "n_disk": 50,
     "n_h_minus": 5000,
-    "n_h": 5000
+    "n_h": 5000,
+    "m_planet": 2,
+    "dist_planet": 0.3
 }
 
 with open("config_file.cfg", "w") as f:
