@@ -60,7 +60,8 @@ def config_read(path):
     dict_config["l_l_slab"] = float(dict_config["l_l_slab"]) * u.AA
     dict_config["n_h_minus"] = int(dict_config["n_h_minus"])
     dict_config["m_planet"] = float(dict_config["m_planet"]) * u.jupiterMass
-    dict_config["n_h_minus"] = int(dict_config["n_h_minus"]) * u.AU
+    dict_config["dist_planet"] = float(dict_config["dist_planet"]) * const.au
+    dict_config["n_h_minus"] = int(dict_config["n_h_minus"])
 
 
     if dict_config["save"] == "True":
@@ -344,7 +345,7 @@ def temp_visc(config: dict, r, r_in):
     return t.to(u.K)
 
 
-def generate_temp_arr(config):  # ask if len r will be user defined
+def generate_temp_arr(config):
     """Calculate r_in, generate the temperature vs radius arrays, and bundle into a dictionary
     Parameters
     ----------
@@ -375,8 +376,6 @@ def generate_temp_arr(config):  # ask if len r will be user defined
     r_in = 7.186 * (b / (1 * u.kG)) ** (4 / 7) * (r_star / (2 * const.R_sun)) ** (5 / 7) / (
             (m_dot / (1e-8 * m_sun_yr)) ** (2 / 7) * (m / (0.5 * const.M_sun)) ** (1 / 7)) * r_star
     r_in = r_in / 2.0  # correction factor taken 0.5, ref Long, Romanova, Lovelace 2005
-    print(r_in)
-    print(r_star)
     r_in = max([r_in, r_star])
 
     # estimate R_sub
@@ -406,8 +405,8 @@ def generate_temp_arr(config):  # ask if len r will be user defined
                 np.round(t_visc[i].value / 500)) * 5
     temp_arr = []
     for i in r_visc:
-        temp_arr.append(d[i.value])
-    # temp_arr = np.array(temp_arr)
+        temp_arr.append(d[i.value])  # ## ## ## ##  ## @@@@@@ CAUSING TROUBLE @@@@@@ ##  ## ## ## ## #
+
     if len(t_visc) == 0:
         r_sub = r_in
         t_max = 14
@@ -425,7 +424,7 @@ def generate_temp_arr(config):  # ask if len r will be user defined
     return dr, t_max, d, r_in, r_sub
 
 
-def generate_temp_arr_planet(config, d:dict):
+def generate_temp_arr_planet(config, d: dict):
     """
     Calculates the annuli which are to be removed in the presence of a planetesimal
     Parameters
@@ -447,12 +446,9 @@ def generate_temp_arr_planet(config, d:dict):
     dist_plnt = config["dist_planet"]
     m = config["m"]
     # Distance of star to L1 from star
-    print(mass_plnt)
-    print("star mass",m)
-    print(mass_plnt/(3*))
     low_plnt_lim = dist_plnt * (1 - (mass_plnt / (3 * m)).value**(1/3))  # ref Higuchi and Ida 2017
     up_plnt_lim = dist_plnt * (1 + (mass_plnt / (3 * m)).value**(1/3))
-    print('Position of L1: LOOK HERE', low_plnt_lim)
+    print('Position of L1: ', low_plnt_lim)
     print('Position of L2: ', up_plnt_lim)
     print('Last element of radius array: ', r_visc.to(u.AU)[-1])
     print(f"planet's influence: {low_plnt_lim} to {up_plnt_lim}\n")
@@ -462,8 +458,8 @@ def generate_temp_arr_planet(config, d:dict):
         if not (low_plnt_lim <= r*u.m <= up_plnt_lim):
             d_new[r] = d[r]
 
-    r_visc_new = d_new.keys()
-    t_visc_new = d_new.values()
+    r_visc_new = list(d_new.keys())
+    t_visc_new = np.array(list(d_new.values()))
 
     return r_visc_new, t_visc_new, d_new
 
@@ -809,13 +805,13 @@ def generate_dusty_disk_flux(config, r_in, r_sub):
         t_visc_dust = np.zeros(len(r_dust)) * u.K
         for i in range(len(r_dust)):
             t_visc_dust[i] = temp_visc(config, r_dust[i], r_in)  # has to be done using for loop to avoid ValueError
-        print(t_visc_dust)
+
         t_dust = np.maximum(t_dust_init, t_visc_dust)
 
     if plot:
         plt.plot(r_dust / const.au, t_dust.value)
         plt.show()
-    print(t_dust)
+
     dust_flux = np.zeros(n_data) * u.erg / (u.cm * u.cm * u.s * u.AA * u.sr) * (u.m * u.m)
     wavelength = np.logspace(np.log10(l_min.value), np.log10(l_max.value), n_data) * u.AA
     for i in range(len(r_dust) - 1):
@@ -985,48 +981,14 @@ def contribution(raw_args=None):
     plt.show()
 
 
-def main(raw_args=None):
-    """Calls the base functions sequentially, and finally generates extinguished spectra for the given system"""
+def new_contribution(config):
+    """
+    Looks at a given region of the spectrum and generates the comparison in the presence and absence of planetesimal
+    Returns
+    -------
 
-    st = time.time()
-    args = parse_args(raw_args)
-    dict_config = config_read(args.ConfigfileLocation)
-    trial_func(dict_config)
-    sys.exit(0)
-
-    dr, t_max, d, r_in, r_sub = generate_temp_arr(dict_config)
-
-    # control line for planetesimal
-    garb1, garb2, d = generate_temp_arr_planet(dict_config, d)
-    wavelength, obs_viscous_disk_flux = generate_visc_flux(dict_config, d, t_max, dr)
-    print('Viscous disk done')
-    obs_mag_flux = magnetospheric_component(dict_config, r_in)
-    print("Magnetic component done")
-    obs_dust_flux = generate_dusty_disk_flux(dict_config, r_in, r_sub)
-    print("Dust component done")
-    obs_star_flux = generate_photosphere_flux(dict_config)
-    print("Photospheric component done")
-    total_flux = dust_extinction_flux(dict_config, wavelength, obs_viscous_disk_flux, obs_star_flux, obs_mag_flux,
-                                      obs_dust_flux)
-
-    et = time.time()
-    print(f"Total time taken : {et - st}")
-    if dict_config['plot']:
-        plt.plot(wavelength, obs_star_flux, label="Stellar photosphere")
-        plt.plot(wavelength, total_flux, label="Total")
-        plt.plot(wavelength, obs_viscous_disk_flux, label="Viscous Disk")
-        plt.plot(wavelength, obs_mag_flux, label="Magnetosphere")
-        plt.plot(wavelength, obs_dust_flux, label="Dusty disk")
-        plt.legend()
-        plt.xlabel("Wavelength [Angstrom]")
-        plt.ylabel("Flux [erg / cm^2 s A]")
-        plt.show()
-
-    print("done")
-
-
-def new_contribution():
-    config = config_read("config_file.das")
+    """
+    # config = config_read("config_file.das")
     dr, t_max, d, r_in, r_sub = generate_temp_arr(config)
 
     save_loc = config['save_loc']
@@ -1034,7 +996,6 @@ def new_contribution():
     l_max = config['l_max']
     n_data = config['n_data']
     r_star = config['r_star']
-    print(d)
     r_visc = np.array([r for r, t in d.items()])
     r_visc = sorted(r_visc) * u.m
     d_star = config['d_star']
@@ -1042,7 +1003,6 @@ def new_contribution():
 
     fig, ax = plt.subplots()
     arr = []
-    radii = []
 
     # trim wavelength axis to region of interest
     wavelength = np.logspace(np.log10(l_min.value), np.log10(l_max.value), n_data)
@@ -1077,29 +1037,61 @@ def new_contribution():
     plt.show()
 
 
-def trial_func(config):
+def temp_profile_planet(config):
+    """
+    Visualizes the annuli that are removed in presence of planetesimal of given mass and radial distance
+    Parameters
+    ----------
+    config : dict
+    """
     dr, t_max, d, r_in, r_sub = generate_temp_arr(config)
     r_visc_nop = np.array([radius for radius, t in d.items()]) * u.m
     t_visc_nop = np.array([t for radius, t in d.items()]) * u.Kelvin
 
-    r, t1, d_new = generate_temp_arr_planet(config, d)
-    r_visc_p = np.array([radius for radius, t in d_new.items()]) * u.m
-    t_visc_p = np.array([t for radius, t in d_new.items()]) * u.Kelvin
-    # np.save("/Users/tusharkantidas/NIUS/testing/Contribution/T1.npy",t1.value)
-    print('_________-ok___________')
+    r_planet, temp_planet, d_new = generate_temp_arr_planet(config, d)
+    r_planet = r_planet * u.m
 
     plt.scatter(r_visc_nop.to(u.AU), t_visc_nop*100, label="Without planetesimal")
-    plt.scatter(r.to(u.AU), t1 * 100, label="With planetesimal", s=5)
-    plt.xlabel("Radius in AU ----->")
-    plt.ylabel("Temperature in K ----->")
+    plt.scatter(r_planet.to(u.AU), temp_planet * 100, label="With planetesimal", s=5)
+    plt.xlabel("Radius in AU")
+    plt.ylabel("Temperature in K")
     plt.legend()
-    #plt.savefig("/Users/tusharkantidas/NIUS/testing/Contribution/Temp_dist_with_radius.pdf")
     plt.show()
 
-    '''
-    m = config["m"]
-    print("mass star", m.to(u.kg))
-    print("mass planet",  (8 * u.jupiterMass).to(u.kg))'''
+
+def main(raw_args=None):
+    """Calls the base functions sequentially, and finally generates extinguished spectra for the given system"""
+
+    st = time.time()
+    args = parse_args(raw_args)
+    dict_config = config_read(args.ConfigfileLocation)
+    dr, t_max, d, r_in, r_sub = generate_temp_arr(dict_config)
+
+    wavelength, obs_viscous_disk_flux = generate_visc_flux(dict_config, d, t_max, dr)
+    print('Viscous disk done')
+    obs_mag_flux = magnetospheric_component(dict_config, r_in)
+    print("Magnetic component done")
+    obs_dust_flux = generate_dusty_disk_flux(dict_config, r_in, r_sub)
+    print("Dust component done")
+    obs_star_flux = generate_photosphere_flux(dict_config)
+    print("Photospheric component done")
+    total_flux = dust_extinction_flux(dict_config, wavelength, obs_viscous_disk_flux, obs_star_flux, obs_mag_flux,
+                                      obs_dust_flux)
+
+    et = time.time()
+    print(f"Total time taken : {et - st}")
+    if dict_config['plot']:
+        plt.plot(wavelength, obs_star_flux, label="Stellar photosphere")
+        plt.plot(wavelength, total_flux, label="Total")
+        plt.plot(wavelength, obs_viscous_disk_flux, label="Viscous Disk")
+        plt.plot(wavelength, obs_mag_flux, label="Magnetosphere")
+        plt.plot(wavelength, obs_dust_flux, label="Dusty disk")
+        plt.legend()
+        plt.xlabel("Wavelength [Angstrom]")
+        plt.ylabel("Flux [erg / cm^2 s A]")
+        plt.show()
+
+    print("done")
 
 
 if __name__ == "__main__":
