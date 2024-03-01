@@ -10,7 +10,7 @@ from multiprocessing import Pool
 import os
 import base_funcs as bf
 
-config = bf.config_read("/Users/tusharkantidas/NIUS/refactoring/config_file.cfg")
+config = bf.config_read("config_file.cfg")
 
 plot = config["plot"]
 save = config["save"]
@@ -22,32 +22,16 @@ h = const.h
 k = const.k_B
 m_e = const.m_e
 Z = 1  # number of protons in the nucleus # here it is Hydrogen
-inclination = config["inclination"]
-b_s = config["b"]
-m_s = config["m"]
-m_dot = config["m_dot"]
 
-r_s = config["r_star"]
-d_s = config["d_star"]
+
 t_h_slab = config["t_slab"]
 n_e = config["n_e"]
 n_i = n_e  # for the H slab ne = ni = nH
-i_h = 13.602 * u.eV
 v_o = 3.28795e15 * u.Hertz  # ionisation frequency of H
-
-# define the upper and lower limits of wavelength
-l_min = config["l_min"]
-l_max = config["l_max"]
-len_w = 100  # number of points in the linspace
-
-lamb = np.logspace(np.log10(l_min.value), np.log10(l_max.value), len_w) * u.AA
-freq = (c / lamb).si
 
 # Defining the blackbody SEDs
 bb_v = BlackBody(temperature=t_h_slab)
-bb_v_arr = bb_v(freq)
 bb_lam = BlackBody(temperature=t_h_slab, scale=1.0 * u.erg / (u.cm ** 2 * u.AA * u.s * u.sr))
-bb_l_arr = bb_lam(lamb)
 
 
 # defining the infinite series summation function
@@ -183,8 +167,8 @@ def get_l_slab(config_file: dict):
     tau = config_file["tau"]
     v = const.c / config_file["l_l_slab"]
     # total emissivity
-    j_h_fb_v = j_h_fb_calc(config, v)
-    j_h_ff_v = j_h_ff_calc(config, v)
+    j_h_fb_v = j_h_fb_calc(config_file, v)
+    j_h_ff_v = j_h_ff_calc(config_file, v)
     j_h_arr = j_h_fb_v + j_h_ff_v
     # define L_slab
     l_slab: astropy.units.Quantity = tau * bb_v(v) / j_h_arr  # L slab in frequency space
@@ -340,9 +324,27 @@ def h_min_inten_wavelength(config_file):
     intensity_h_minus_l = j_h_minus_l * l_slab * beta_h_minus_v_arr
     print(len(intensity_h_minus_l))
     if save_grid:
-        save_loc = config_file["h_min_grid_loc"]
+        save_loc = config_file["h_min_grid_path"]
         name = f"{int(config_file['t_slab'].value)}_tau_{np.round(config_file['tau'],1)}_" \
                f"e{int(np.log10(config_file['n_e'].value))}_len_{config_file['n_h_minus']}"
+        dtls_wrte = str(f"\n****** Constants Used *******\n"
+                        f"G : {G}\nc : {c}\n"
+                        f"h : {h}\nk : {k}\n"
+                        f"m_e : {m_e}\nZ : {Z}\t number of protons in the nucleus, here it is Hydrogen\n"
+                        f"v_o = 3.28795e15 Hz\t ionisation frequency of H\n"
+                        f"\n****** Parameters from Config File ******\n"
+                        f"t_slab = {config_file['t_slab']}\t Temperature of the slab\n"
+                        f"tau = {config_file['tau']}\t optical depth\n"
+                        f"n_e : 10**({np.log10(n_e.value)})\t Density of electrons\n"
+                        f"l_l_slab = {config_file['l_l_slab']}\t ref wavelength for "
+                        f"length of slab\n"
+                        f"v = {(const.c / config_file['l_l_slab']).to(u.Hz)}\t ref frequency for "
+                        f"length of slab\n"
+                        f"l_min = {config_file['l_min']}\n"
+                        f"l_max = {config_file['l_max']}\n"
+                        f"n_h_minus = {config_file['n_h_minus']}\tlength of energy axis\n"
+                        f"\n\n----- Some important parameters -----\n\n"
+                        f"l_slab : {l_slab}\tlength of the slab calculated\n")
         if os.path.exists(f"{save_loc}/{name}"):
             print("grid for given configuration of t_slab, tau, n_e and len_h_minus exists!!")
         else:
@@ -352,7 +354,7 @@ def h_min_inten_wavelength(config_file):
             np.save(f"{save_loc}/{name}/j_h_tot.npy", j_h_minus_l.value)
             np.save(f"{save_loc}/{name}/kappa_h_l_tot.npy", kappa_h_l_tot.value)
             with open(f'{save_loc}/{name}/details.txt', 'w+') as f:
-                f.write(str(config_file))
+                f.write(dtls_wrte)
     return intensity_h_minus_l
 
 
@@ -378,13 +380,13 @@ def generate_grid_h_min(config_file, t_slab_para, den, opti_depth):
     config_file["tau"] = opti_depth
     inten = h_min_inten_wavelength(config_file)
     saving = config_file["save_grid_data"]
-    print(f"save :{saving}")
+    print(f"save : {saving}")
 
 
 if __name__ == "__main__":
-    for temp in range(8000, 12000, 500):
-        for tau in [0.1, 0.5, 1.0, 5.0]:
-            for n in [11, 12, 13, 14, 15, 16]:
+    for temp in range(8000, 8500, 500):
+        for tau in [5.0]:
+            for n in [13]:
                 print(temp, tau, n)
                 generate_grid_h_min(config_file=config, t_slab_para=temp, den=n, opti_depth=tau)
                 print("---------------------------*******-------------")
