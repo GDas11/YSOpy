@@ -1,4 +1,5 @@
 # YSOSpectrum
+![YSO System](https://github.com/GDas11/YSOpy/assets/126319120/36a7c475-2a39-4f89-bbbd-60dc702161b9)
 *******************************
 This Python package is currently in the **DEVELOPMENTAL STAGE**.
 *******************************
