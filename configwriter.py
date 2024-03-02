@@ -6,7 +6,7 @@ config['Default'] = {
     # stellar params
     "b": 1,
     "m": 1,
-    "m_dot": 4e-11,
+    "m_dot": 4e-7,
     "r_star": 1.7,
     "log_g_star": 3.5,
     "inclination": 38,
@@ -24,7 +24,7 @@ config['Default'] = {
     "tau": 1.0,
     # Saving, plotting booleans, Addresses of some resources
     "save": False,
-    "plot": False,
+    "plot": True,
     "bt_settl_path": r"/Users/tusharkantidas/NIUS/Temp",
     "save_loc": r"/Users/tusharkantidas/NIUS/testing/Contribution/Planetesimal2",
     "save_grid_data": False, # saving the grid for H slab

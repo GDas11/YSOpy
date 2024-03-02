@@ -1,1 +1,5 @@
 .idea
+.gitignore
+testing_p.py
+README.md
+sys_arg.py
