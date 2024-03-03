@@ -31,8 +31,6 @@ config['Default'] = {
     "save_each": False, # for each annuli saving
     "h_grid_path":  r"/Users/tusharkantidas/NIUS/refactoring/grid/test_details",#r"/Users/tusharkantidas/NIUS/refactoring/grid/h_emission/Sample",
     "h_min_grid_path": r"/Users/tusharkantidas/NIUS/refactoring/grid/test_details", # r"/Users/tusharkantidas/NIUS/refactoring/grid/h_min_emission",
-    "h_grid_loc": r"/Users/tusharkantidas/NIUS/refactoring/grid/h_emission/Sample",
-    "h_min_grid_loc": r"/Users/tusharkantidas/NIUS/refactoring/grid/h_min_emission",
     # Wavelength domain parameters
     "l_min": 1250,
     "l_max": 5e4,

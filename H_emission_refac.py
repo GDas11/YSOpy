@@ -201,14 +201,14 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
     lam = np.logspace(np.log10(config_file['l_min'].value),
                       np.log10(config_file['l_max'].value), config_file['n_h']) * u.AA
     v = const.c / lam
-    h_grid_loc = config_file["h_grid_path"]
+    h_grid_path = config_file["h_grid_path"]
     # print(lam)
     config_file["t_slab"] = t_slab_para * u.K
     config_file["n_e"] = 10 ** den * (u.cm ** (-3))
     config_file["tau"] = opti_depth
     saving = config_file["save_grid_data"]
-    if os.path.exists(f"{h_grid_loc}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}"):
-        j_h_arr = np.load(f"{h_grid_loc}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/j_h_tot.npy") * (u.erg / (u.cm ** 3 * u.Hz * u.s * u.sr))
+    if os.path.exists(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}"):
+        j_h_arr = np.load(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/j_h_tot.npy") * (u.erg / (u.cm ** 3 * u.Hz * u.s * u.sr))
         if len(j_h_arr) == config_file["n_h"]:
             print('True, the grid exists so not going for multiprocess')
             print(f"{t_slab_para}_{opti_depth}_{len(j_h_arr)} exists")
@@ -217,15 +217,15 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
             print(f'Length of the data set present is incompatible : {config_file["n_h"]} given : {len(j_h_arr)} having')
             j_h_arr = main(config_file, v)
             if saving:
-                os.mkdir(f"{h_grid_loc}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}")
-                np.save(f"{h_grid_loc}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/j_h_tot.npy",j_h_arr.value)
+                os.mkdir(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}")
+                np.save(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/j_h_tot.npy", j_h_arr.value)
 
     else:
         print('False: this has to go for multiprocess grid not found')
         j_h_arr = main(config_file, v)
         if saving:
-            os.mkdir(f"{h_grid_loc}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}")
-            np.save(f"{h_grid_loc}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/j_h_tot.npy", j_h_arr.value)
+            os.mkdir(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}")
+            np.save(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/j_h_tot.npy", j_h_arr.value)
     t_slab = config_file["t_slab"]
     bb_freq = BlackBody(temperature=t_slab)  # blackbody thing to be used in freq case
     l_slab = get_l_slab(config_file)
@@ -237,7 +237,7 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
     # print(intensity_h_l)
 
     if saving:
-        np.save(f"{h_grid_loc}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/Flux_wav.npy", intensity_h_l.value)
+        np.save(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/Flux_wav.npy", intensity_h_l.value)
         dtls_wrte = str(f"\n****** Constants Used *******\n"
                         f"G : {G}\nc : {c}\n"
                         f"h : {h}\nk : {k}\n"
@@ -265,7 +265,7 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
                    'len_w': config_file['n_h'],
                    f'L_slab ({l_slab.unit})': l_slab.value,
                    'Equilibrium Quantum Level ': n}
-        with open(f"{h_grid_loc}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/details.txt", 'w+') as f:
+        with open(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/details.txt", 'w+') as f:
             f.write(str(dtls_wrte))
     else:
         print('Data not saving!!')

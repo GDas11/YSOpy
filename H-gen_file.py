@@ -324,7 +324,7 @@ def h_min_inten_wavelength(config_file):
     intensity_h_minus_l = j_h_minus_l * l_slab * beta_h_minus_v_arr
     print(len(intensity_h_minus_l))
     if save_grid:
-        save_loc = config_file["h_min_grid_path"]
+        h_min_grid_path = config_file["h_min_grid_path"]
         name = f"{int(config_file['t_slab'].value)}_tau_{np.round(config_file['tau'],1)}_" \
                f"e{int(np.log10(config_file['n_e'].value))}_len_{config_file['n_h_minus']}"
         dtls_wrte = str(f"\n****** Constants Used *******\n"
@@ -345,15 +345,15 @@ def h_min_inten_wavelength(config_file):
                         f"n_h_minus = {config_file['n_h_minus']}\tlength of energy axis\n"
                         f"\n\n----- Some important parameters -----\n\n"
                         f"l_slab : {l_slab}\tlength of the slab calculated\n")
-        if os.path.exists(f"{save_loc}/{name}"):
+        if os.path.exists(f"{h_min_grid_path}/{name}"):
             print("grid for given configuration of t_slab, tau, n_e and len_h_minus exists!!")
         else:
             print('Grid DNE so creating')
-            os.mkdir(f"{save_loc}/{name}")
-            np.save(f"{save_loc}/{name}/Flux_wav.npy", intensity_h_minus_l.value)
-            np.save(f"{save_loc}/{name}/j_h_tot.npy", j_h_minus_l.value)
-            np.save(f"{save_loc}/{name}/kappa_h_l_tot.npy", kappa_h_l_tot.value)
-            with open(f'{save_loc}/{name}/details.txt', 'w+') as f:
+            os.mkdir(f"{h_min_grid_path}/{name}")
+            np.save(f"{h_min_grid_path}/{name}/Flux_wav.npy", intensity_h_minus_l.value)
+            np.save(f"{h_min_grid_path}/{name}/j_h_tot.npy", j_h_minus_l.value)
+            np.save(f"{h_min_grid_path}/{name}/kappa_h_l_tot.npy", kappa_h_l_tot.value)
+            with open(f'{h_min_grid_path}/{name}/details.txt', 'w+') as f:
                 f.write(dtls_wrte)
     return intensity_h_minus_l
 
