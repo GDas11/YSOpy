@@ -2,4 +2,7 @@
 .gitignore
 testing_p.py
 README.md
-sys_arg.py
+config_generator.py
+.DS_Store
+__pycache__/
+console_func.py

@@ -562,6 +562,9 @@ def generate_visc_flux(config, d: dict, t_max, dr, r_in=None):
         np.save(f'{save_loc}/disk_component.npy', obs_viscous_disk_flux.value)
     if plot:
         plt.plot(wavelength, obs_viscous_disk_flux)
+        plt.xlabel("Wavelength in Angstrom ----->")
+        plt.ylabel("Flux [erg / ($cm^{2}$ s angstrom)] ----->")
+        plt.title("Viscous Disk SED")
         plt.show()
 
     return wavelength, obs_viscous_disk_flux
@@ -600,9 +603,9 @@ def generate_photosphere_flux(config):
     obs_star_flux = y_new_star * (r_star.si / d_star.si) ** 2
     if config['plot']:
         plt.plot(wavelength, obs_star_flux)
-        plt.title('Photospheric flux')
-        plt.xlabel('wavelength')
-        plt.ylabel('observed flux')
+        plt.xlabel("Wavelength in $\AA$ ----->")
+        plt.ylabel("Flux [erg / ($cm^{2}$ s $\AA$)] ----->")
+        plt.title("Stellar Photosphere SED")
         plt.show()
     if config['save']:
         np.save(f"{config['save_loc']}/stellar_component.npy", obs_star_flux.value)
@@ -749,6 +752,9 @@ def magnetospheric_component(config, r_in):
     if plot:
         wav_ax = np.logspace(np.log10(l_min.value), np.log10(l_max.value), n_data)
         plt.plot(wav_ax, obs_mag_flux)
+        plt.xlabel("Wavelength in $\AA$ ----->")
+        plt.ylabel("Flux [erg / ($cm^{2}$ s $\AA$)] ----->")
+        plt.title("Magnetospheric Shock Region SED")
         plt.show()
 
     if save:
@@ -832,6 +838,9 @@ def generate_dusty_disk_flux(config, r_in, r_sub):
 
     if plot:
         plt.plot(r_dust / const.au, t_dust.value)
+        plt.xlabel("Radial distance (in AU) ----->")
+        plt.ylabel("Temperature (in Kelvin) ----->")
+        plt.title("Dusty Disk Radial Temperature Variation")
         plt.show()
     print(t_dust)
     dust_flux = np.zeros(n_data) * u.erg / (u.cm * u.cm * u.s * u.AA * u.sr) * (u.m * u.m)
@@ -850,6 +859,9 @@ def generate_dusty_disk_flux(config, r_in, r_sub):
         np.save(f'{save_loc}/dust_component.npy', obs_dust_flux.value)
     if plot:
         plt.plot(wavelength, obs_dust_flux)
+        plt.xlabel("Wavelength in $\AA$ ----->")
+        plt.ylabel("Flux [erg / ($cm^{2}$ s $\AA$)] ----->")
+        plt.title("Dust Dominated Disk SED")
         plt.show()
     return obs_dust_flux
 
@@ -899,8 +911,9 @@ def dust_extinction_flux(config, wavelength, obs_viscous_disk_flux, obs_star_flu
         np.save(f'{save_loc}/extinguished_spectra.npy', total_flux.value)
     if plot:
         plt.plot(wavelength, total_flux.value, label='extinguished spectrum')
-        plt.xlabel(r'Wavelength [$\AA$]')
-        plt.ylabel(r'Flux [erg / cm^2 s A]')
+        plt.xlabel("Wavelength in $\AA$ ----->")
+        plt.ylabel("Flux [erg / ($cm^{2}$ s $\AA$)] ----->")
+        plt.title("Extinguished Spectra")
         plt.legend()
         plt.show()
     return total_flux
