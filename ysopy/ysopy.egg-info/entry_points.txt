@@ -1,0 +1,4 @@
+[console_scripts]
+yso = ysopy.config_generator:intro
+yso_cfg = ysopy.config_generator:main
+yso_gen = ysopy.console_func:main
