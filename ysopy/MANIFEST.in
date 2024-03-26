@@ -1,5 +1,0 @@
-graft ysopy
-include setup.py
-include pyproject.toml
-
-global-exclude *.py[cod]

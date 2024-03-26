@@ -36,7 +36,10 @@ Requires-Dist: pandas>=1.5.3
 Requires-Dist: scipy>=1.10.1
 
 # YSOSpectrum
+![YSO System](https://github.com/GDas11/YSOpy/assets/126319120/36a7c475-2a39-4f89-bbbd-60dc702161b9)
+*******************************
 This Python package is currently in the **DEVELOPMENTAL STAGE**.
+*******************************
 We are currently working on bringing a new Python package to study and characterise the spectrum of young stellar objects (YSOs).
 This pipeline currently looks into four aspects of the spectrum:-
 - Viscously Heated Disk
