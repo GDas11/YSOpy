@@ -276,7 +276,7 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
 
 
 if __name__ == '__main__':
-    config = bf.config_read("/Users/tusharkantidas/NIUS/refactoring/config_file.cfg")
+    config = bf.config_read("config_file.cfg")
     for temp in range(8000, 8500, 500):
         for tau in [0.01]:
             for n in [14]:

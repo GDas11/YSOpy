@@ -364,6 +364,7 @@ def generate_temp_arr(config):  # ask if len r will be user defined
     """
     m_sun_yr = const.M_sun / (1 * u.yr).to(u.s)
     plot = config['plot']
+    save = config['save']  # has to be synced with saveloc
     m = config['m']
     r_star = config['r_star']
     m_dot = config['m_dot']
@@ -413,6 +414,9 @@ def generate_temp_arr(config):  # ask if len r will be user defined
         t_max = int(max(d.values()))
         r_sub = r_visc[-1]
         dr = r_visc[1] - r_visc[0]
+    if save:
+        np.save("radius_arr.npy", r_visc.si.value)
+        np.save("temp_arr.npy", t_visc.si.value)
 
     if plot:
         plt.plot(r_visc / const.R_sun, t_visc)
