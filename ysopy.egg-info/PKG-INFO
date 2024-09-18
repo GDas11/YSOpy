@@ -1,3 +1,40 @@
+Metadata-Version: 2.1
+Name: ysopy
+Version: 0.0.2
+Summary: This package is meant to serve as a tool to generate the theoretical model spectra of a given young stellar object (YSO) based on the given PMS parameters
+Author-email: Gautam Das <gd21ms150@iiserkol.ac.in>, Archis Mukhopadhyay <am21ms230@iiserkol.ac.in>
+Maintainer-email: Gautam Das <gd21ms150@iiserkol.ac.in>
+License: Copyright 2024 Gautam Das
+        Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+        and associated documentation files (the “Software”), to deal in the Software without restriction,
+        including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+        and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
+        subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all copies or substantial
+        portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+        NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+        IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+        WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+        SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+Project-URL: Homepage, https://github.com/GDas11/YSOpy
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Scientific/Engineering :: Astronomy
+Requires-Python: <3.12,>=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: astropy<5.2,>=5.1
+Requires-Dist: dust_extinction>=1.2
+Requires-Dist: matplotlib>=3.7.1
+Requires-Dist: numpy>=1.24.3
+Requires-Dist: pandas>=1.5.3
+Requires-Dist: scipy>=1.10.1
+
 # YSOSpectrum
 ![YSO System](https://github.com/GDas11/YSOpy/assets/126319120/36a7c475-2a39-4f89-bbbd-60dc702161b9)
 *******************************

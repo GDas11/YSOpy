@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name="ysopy"
+version="0.0.2"
+description="This package is meant to serve as a tool to generate the theoretical model spectra of a given young stellar object (YSO) based on the given PMS parameters"
+readme="README.md"
+license= {file = "LICENSE"}
+authors=[{name = "Gautam Das", email = "gd21ms150@iiserkol.ac.in"},
+    {name="Archis Mukhopadhyay", email= "am21ms230@iiserkol.ac.in"}]
+maintainers = [{name = "Gautam Das", email = "gd21ms150@iiserkol.ac.in"}]
+dependencies = [
+        "astropy >= 5.1",
+        "dust_extinction >= 1.2",
+        "matplotlib >= 3.7.1",
+        "numpy >= 1.24.3",
+        "pandas >= 1.5.3",
+        "scipy >= 1.10.1",
+    ]
+requires-python=">=3.9"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Astronomy"
+]
+#long_description_content_type="text/markdown",
+# optional
+[project.urls]
+Homepage="https://github.com/GDas11/YSOpy"
+[project.scripts]
+yso = "ysopy.config_generator:intro"
+yso_gen = "ysopy.console_func:main"
+yso_cfg = "ysopy.config_generator:main"
+
