@@ -198,7 +198,7 @@ def main():
         parser.add_argument('h_min_grid_path', metavar="h_m_path", type=dir_path)
 
     arguments = parser.parse_args()
-    # print(arguments)
+    print(arguments)
     dictt = vars(arguments)
     print(dictt)
     config = ConfigParser()

@@ -55,7 +55,7 @@ def infinisum(f, m: int):
     res = sum(f(k) for k in range(n, 2 ** n))
     while True:
         term = sum(f(k) for k in range(2 ** n, 2 ** (n + 1)))
-        if term < 1e-8:
+        if term < 1e-2:
             break
         n, res = n + 1, res + term
         # print(term, res)
@@ -325,7 +325,7 @@ def h_min_inten_wavelength(config_file):
     print(len(intensity_h_minus_l))
     if save_grid:
         h_min_grid_path = config_file["h_min_grid_path"]
-        name = f"{int(config_file['t_slab'].value)}_tau_{np.round(config_file['tau'],1)}_" \
+        name = f"temp_{int(config_file['t_slab'].value)}_tau_{np.round(config_file['tau'],1)}_" \
                f"e{int(np.log10(config_file['n_e'].value))}_len_{config_file['n_h_minus']}"
         dtls_wrte = str(f"\n****** Constants Used *******\n"
                         f"G : {G}\nc : {c}\n"
@@ -384,9 +384,9 @@ def generate_grid_h_min(config_file, t_slab_para, den, opti_depth):
 
 
 if __name__ == "__main__":
-    for temp in range(8000, 8500, 500):
-        for tau in [5.0]:
-            for n in [13]:
+    for temp in range(8000, 11000, 500):
+        for tau in [0.5,1.0,1.5,2.0]:
+            for n in [12, 13, 14]:
                 print(temp, tau, n)
                 generate_grid_h_min(config_file=config, t_slab_para=temp, den=n, opti_depth=tau)
-                print("---------------------------*******-------------")
+                print("---------------------*******-------------------")

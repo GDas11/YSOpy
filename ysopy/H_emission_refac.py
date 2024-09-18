@@ -21,8 +21,6 @@ Z = 1  # number of protons in the nucleus # here it is Hydrogen
 i_h = 13.602 * u.eV
 v_o = 3.28795e15 * u.Hertz  # ionisation frequency of H
 
-# defining the infinite series summation function
-
 def infinisum(f, m: int):
     """This calculates the infinite sum of a function f
     given some accuracy (by default 1e-8)
@@ -36,13 +34,12 @@ def infinisum(f, m: int):
     ----------
     res: float
         infinite sum for given parameters
-
     """
     n = m
     res = sum(f(k) for k in range(n, 2 ** n))
     while True:
         term = sum(f(k) for k in range(2 ** n, 2 ** (n + 1)))
-        if term < 1e-8:  # should it be a parameter??????
+        if term < 1e-2:  # accuracy of the series summation, make parameter?
             break
         n, res = n + 1, res + term
         # print(term, res)
@@ -109,11 +106,14 @@ def j_h_fb_calc(config_file, v):
 
 def j_h_ff_calc(config_file, v):
     """
+    Calculate the free-free emissivity
+    Parameters
+    ----------
+    config_file
+    v
 
-    :param config_file:
-    :param v: astropy.units.Quantity
-    It gives te
-    :return:
+    Returns
+    -------
     """
     t_slab = config_file["t_slab"]
     n_e = config_file["n_e"]
@@ -131,9 +131,15 @@ def main(config_file: dict, v: astropy.units.Quantity):
     This function takes in the config_file and the frequency and gives the total emissivity parameter
     for H emission case. Note this function will not save anything. For saving we have to
     use generate_grid_h.
-    :param config_file: This parameter is to give the configuration file
-    :param v: frequency in units of hertz
-    :return: emissivity parameter (j) at that frequency
+    Parameters
+    ----------
+    config_file : dict
+    v : np.ndarray
+
+
+    Returns
+    -------
+    j_h_total :
     """
     h_fb_arr, h_ff_arr = [], []
     p = Pool()
@@ -176,7 +182,7 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
     This function is to generate a grid of h emission spectra. It also checks if a file has
     been created earlier and stored. If not then it goes to calculate the emissivity parameter
     array from scratch given the parameters.
-    Note for case of H emission there is not a need to calculate for different ne values
+    Note for case of H emission there is not a need to calculate for different n_e values
     as intensity doesn't depend on that factor.
     Parameters
     -----------
@@ -202,30 +208,30 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
                       np.log10(config_file['l_max'].value), config_file['n_h']) * u.AA
     v = const.c / lam
     h_grid_path = config_file["h_grid_path"]
-    # print(lam)
     config_file["t_slab"] = t_slab_para * u.K
     config_file["n_e"] = 10 ** den * (u.cm ** (-3))
     config_file["tau"] = opti_depth
     saving = config_file["save_grid_data"]
-    if os.path.exists(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}"):
-        j_h_arr = np.load(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/j_h_tot.npy") * (u.erg / (u.cm ** 3 * u.Hz * u.s * u.sr))
+    # directory name is of the form: temp_5000_tau_1.0_len_5000
+    dirname = f"temp_{t_slab_para}_tau_{tau}_len_{config_file['n_h']}"
+    if os.path.exists(f"{h_grid_path}/{dirname}"):
+        j_h_arr = np.load(f"{h_grid_path}/{dirname}/j_h_tot.npy") * (u.erg / (u.cm ** 3 * u.Hz * u.s * u.sr))
         if len(j_h_arr) == config_file["n_h"]:
             print('True, the grid exists so not going for multiprocess')
             print(f"{t_slab_para}_{opti_depth}_{len(j_h_arr)} exists")
         else:
-            print('False: this has to go for multiprocess grid not found')
+            print('False: this has to go for multiprocess, grid not found')
             print(f'Length of the data set present is incompatible : {config_file["n_h"]} given : {len(j_h_arr)} having')
             j_h_arr = main(config_file, v)
             if saving:
-                os.mkdir(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}")
-                np.save(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/j_h_tot.npy", j_h_arr.value)
-
+                os.makedirs(f"{h_grid_path}/{dirname}")
+                np.save(f"{h_grid_path}/{dirname}/j_h_tot.npy", j_h_arr.value)
     else:
-        print('False: this has to go for multiprocess grid not found')
+        print('False: this has to go for multiprocess, grid not found')
         j_h_arr = main(config_file, v)
         if saving:
-            os.mkdir(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}")
-            np.save(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/j_h_tot.npy", j_h_arr.value)
+            os.makedirs(f"{h_grid_path}/{dirname}")
+            np.save(f"{h_grid_path}/{dirname}/j_h_tot.npy", j_h_arr.value)
     t_slab = config_file["t_slab"]
     bb_freq = BlackBody(temperature=t_slab)  # blackbody thing to be used in freq case
     l_slab = get_l_slab(config_file)
@@ -234,10 +240,8 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
     beta_h_v_arr = (1 - np.exp(-tau_v_arr_h)) / tau_v_arr_h
     intensity_h_l = (j_h_arr * l_slab * beta_h_v_arr * (c / (lam ** 2))).to(
         u.erg / (u.cm ** 2 * u.s * u.AA * u.sr))
-    # print(intensity_h_l)
-
     if saving:
-        np.save(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/Flux_wav.npy", intensity_h_l.value)
+        np.save(f"{h_grid_path}/{dirname}/Flux_wav.npy", intensity_h_l.value)
         dtls_wrte = str(f"\n****** Constants Used *******\n"
                         f"G : {G}\nc : {c}\n"
                         f"h : {h}\nk : {k}\n"
@@ -265,20 +269,17 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
                    'len_w': config_file['n_h'],
                    f'L_slab ({l_slab.unit})': l_slab.value,
                    'Equilibrium Quantum Level ': n}
-        with open(f"{h_grid_path}/{t_slab_para}_tau_{tau}_len_{config_file['n_h']}/details.txt", 'w+') as f:
+        with open(f"{h_grid_path}/{dirname}/details.txt", 'w+') as f:
             f.write(str(dtls_wrte))
     else:
-        print('Data not saving!!')
+        print('Data not saving!! Details were not stored.')
     return intensity_h_l
-
-
-# define multi-core process
 
 
 if __name__ == '__main__':
     config = bf.config_read("config_file.cfg")
-    for temp in range(8000, 8500, 500):
-        for tau in [0.01]:
-            for n in [14]:
+    for temp in range(8000, 11000, 500):
+        for tau in [0.5,1.0,1.5,2.0]:
+            for n in [12, 13, 14]:
                 print(temp, tau, n)
                 inten = generate_grid_h(config_file=config, t_slab_para=temp, opti_depth=tau, den=n)
