@@ -23,9 +23,10 @@ k = const.k_B
 m_e = const.m_e
 Z = 1  # number of protons in the nucleus # here it is Hydrogen
 
+
 t_h_slab = config["t_slab"]
 n_e = config["n_e"]
-n_i = n_e  # for the H slab n_e = ni = nH
+n_i = n_e  # for the H slab ne = ni = nH
 v_o = 3.28795e15 * u.Hertz  # ionisation frequency of H
 
 # Defining the blackbody SEDs

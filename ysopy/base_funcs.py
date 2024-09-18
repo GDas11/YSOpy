@@ -59,7 +59,7 @@ def config_read(path):
     dict_config["n_h"] = int(dict_config["n_h"])
     dict_config["l_l_slab"] = float(dict_config["l_l_slab"]) * u.AA
     dict_config["n_h_minus"] = int(dict_config["n_h_minus"])
-
+    
     for param in ["save", "save_each", "plot", "save_grid_data"]:
         if dict_config[param] == "True":
             dict_config[param] = True
@@ -369,12 +369,12 @@ def generate_temp_arr(config):  # ask if len r will be user defined
     for i in range(len(t_visc)):
         t_visc[i] = temp_visc(config, r_visc[i], r_in)
 
+
     # truncate at T < 1400 K, i.e. sublimation temperature of the dust
     t_visc = ma.masked_less(t_visc, 1400 * u.K)
     r_visc = ma.masked_where(ma.getmask(t_visc), r_visc)
     t_visc = ma.compressed(t_visc)
     r_visc = ma.compressed(r_visc)
-
     d = {}
     for i in range(len(r_visc)):
         t_int = int(np.round(t_visc[i].value / 100))
@@ -384,7 +384,6 @@ def generate_temp_arr(config):  # ask if len r will be user defined
             d[r_visc[i].value] = int(np.round(t_visc[i].value / 200)) * 2
         elif 120 < t_int:  # and t_int % 5 != 0:
             d[r_visc[i].value] = int(np.round(t_visc[i].value / 500)) * 5
-
     if len(t_visc) == 0:
         r_sub = r_in
         t_max = 14
@@ -393,13 +392,15 @@ def generate_temp_arr(config):  # ask if len r will be user defined
         t_max = int(max(d.values()))
         r_sub = r_visc[-1]
         dr = r_visc[1] - r_visc[0]
+    if save:
+        np.save("radius_arr.npy", r_visc.si.value)
+        np.save("temp_arr.npy", t_visc.si.value)
 
     if plot:
         plt.plot(r_visc / const.R_sun, t_visc)
         plt.ylabel('Temperature [Kelvin]')
         plt.xlabel(r'Radius $R_{sun}$')
         plt.show()
-
     return dr, t_max, d, r_in, r_sub
 
 
@@ -652,7 +653,6 @@ def magnetospheric_component(config, r_in):
         bb_spec = bb_spec * u.sr
         h_slab_flux = np.append(h_slab_flux, bb_spec[1:])
         wav_slab = np.append(wav_slab, wav2[1:])
-
         # calculate the total luminosity to get the area of the shock
         # this is the approach taken by Liu et al., however  for low accretion rates, this yields a very large covering fraction
         integrated_flux = trapezoid(h_slab_flux, wav_slab)
@@ -1104,7 +1104,6 @@ def new_contribution():
     plt.ylabel("log_10 Flux (+ offset) [erg / cm^2 s A]")
     plt.legend()
     plt.show()
-
 def total_spec():
 
 

@@ -3,7 +3,6 @@ from configparser import ConfigParser
 import argparse
 import os
 from pathlib import Path
-
 def intro():
     print("YSOpy package up and running\nCredits: Gautam Das and Archis Mukhopadhyay\nPI: Joe P. Ninan")
 

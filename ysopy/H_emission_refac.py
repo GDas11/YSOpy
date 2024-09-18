@@ -21,7 +21,6 @@ Z = 1  # number of protons in the nucleus # here it is Hydrogen
 i_h = 13.602 * u.eV
 v_o = 3.28795e15 * u.Hertz  # ionisation frequency of H
 
-
 def infinisum(f, m: int):
     """This calculates the infinite sum of a function f
     given some accuracy (by default 1e-8)
@@ -115,7 +114,6 @@ def j_h_ff_calc(config_file, v):
 
     Returns
     -------
-
     """
     t_slab = config_file["t_slab"]
     n_e = config_file["n_e"]
@@ -214,7 +212,6 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
     config_file["n_e"] = 10 ** den * (u.cm ** (-3))
     config_file["tau"] = opti_depth
     saving = config_file["save_grid_data"]
-
     # directory name is of the form: temp_5000_tau_1.0_len_5000
     dirname = f"temp_{t_slab_para}_tau_{tau}_len_{config_file['n_h']}"
     if os.path.exists(f"{h_grid_path}/{dirname}"):
@@ -235,7 +232,6 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
         if saving:
             os.makedirs(f"{h_grid_path}/{dirname}")
             np.save(f"{h_grid_path}/{dirname}/j_h_tot.npy", j_h_arr.value)
-
     t_slab = config_file["t_slab"]
     bb_freq = BlackBody(temperature=t_slab)  # blackbody thing to be used in freq case
     l_slab = get_l_slab(config_file)
@@ -244,7 +240,6 @@ def generate_grid_h(config_file, t_slab_para, den, opti_depth):
     beta_h_v_arr = (1 - np.exp(-tau_v_arr_h)) / tau_v_arr_h
     intensity_h_l = (j_h_arr * l_slab * beta_h_v_arr * (c / (lam ** 2))).to(
         u.erg / (u.cm ** 2 * u.s * u.AA * u.sr))
-
     if saving:
         np.save(f"{h_grid_path}/{dirname}/Flux_wav.npy", intensity_h_l.value)
         dtls_wrte = str(f"\n****** Constants Used *******\n"
