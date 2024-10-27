@@ -3,7 +3,7 @@ from astropy.modeling.models import BlackBody
 import astropy.constants as const
 import astropy.units as u
 import os
-import base_funcs as bf
+#from utils import config_read
 
 # define the constants
 c = const.c
@@ -175,8 +175,6 @@ def generate_grid_h(config_file, t_slab, log_n_e, tau):
     -----------
     astropy.units.Quantity
     An intensity array in units of (u.erg / (u.cm ** 2 * u.s * u.AA * u.sr)) [wavelength space]
-
-
     """
     lam = np.logspace(np.log10(config_file['l_min'].value),
                       np.log10(config_file['l_max'].value), config_file['n_h']) * u.AA
@@ -224,34 +222,6 @@ def generate_grid_h(config_file, t_slab, log_n_e, tau):
 
     if saving:
         np.save(f"{h_grid_path}/{dirname}/Flux_wav.npy", intensity_h_l.value)
-        dtls_wrte = str(f"\n****** Constants Used *******\n"
-                        f"h : {h}\nk : {k}\n"
-                        f"m_e : {m_e}\n"
-                        f"Z : {Z}\t number of protons in the nucleus, here it is Hydrogen\n"
-                        #f"Equilibrium Quantum Level : {n}\n"       #Where does this come from?
-                        f"v_o = 3.28795e15 Hz\t ionisation frequency of H\n"
-                        f"\n****** Parameters from Config File ******\n"
-                        f"t_slab = {config_file['t_slab']}\t Temperature of the slab\n"
-                        f"tau = {config_file['tau']}\t optical depth\n"
-                        f"l_l_slab = {config_file['l_l_slab']}\t ref wavelength for "
-                        f"length of slab\n"
-                        f"v = {(const.c / config_file['l_l_slab']).to(u.Hz)}\t ref frequency for "
-                        f"length of slab\n"
-                        f"l_min = {config_file['l_min']}\n"
-                        f"l_max = {config_file['l_max']}\n"
-                        f"n_h_minus = {config_file['n_h_minus']}\tlength of energy axis\n"
-                        f"\n\n----- Some important parameters -----\n\n"
-                        f"l_slab : {l_slab}\tlength of the slab calculated\n")
-        details = {f'T_h_slab ({t_slab.unit})': t_slab.value,
-                   f'ne ': config_file["n_e"],
-                   f'tau': tau,
-                   f"l_init ({config_file['l_min'].unit})": config_file['l_min'],
-                   f"l_final ({config_file['l_max'].unit})": config_file['l_max'],
-                   'len_w': config_file['n_h'],
-                   f'L_slab ({l_slab.unit})': l_slab.value}
-                   #'Equilibrium Quantum Level ': n}        ## Where does this come from?
-        with open(f"{h_grid_path}/{dirname}/details.txt", 'w+') as f:
-            f.write(str(dtls_wrte))
     else:
         print('Data not saving!! Details were not stored.')
 
@@ -280,10 +250,14 @@ def get_h_intensity(config_file):
 
     return intensity_h_l
 
+
+# to generate a grid of values
+'''
 if __name__ == '__main__':
-    config = bf.config_read("config_file.cfg")
+    config = config_read("config_file.cfg")
     for temp in (8000,):
         for tau in [1.0,]:
             for log_n_e in [13,]:
                 print(temp, tau, log_n_e)
                 inten = generate_grid_h(config_file=config, t_slab=temp, tau=tau, log_n_e=log_n_e)
+'''

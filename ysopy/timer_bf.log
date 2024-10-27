@@ -1,0 +1,9 @@
+INFO:__main__:Viscous disk done, time taken : 10.519691944122314
+INFO:__main__:Magnetic component done, time taken :3.331829309463501
+INFO:__main__:Dust component done, time taken : 0.6101357936859131
+INFO:__main__:Photospheric component done, time taken 0.010926008224487305
+INFO:__main__:{'b': <Quantity 0.955 kG>, 'm': <Quantity 1.78956888e+30 kg>, 'm_dot': <Quantity 1.99108145e+17 kg / s>, 'r_star': <Quantity 1.259217e+09 m>, 'inclination': <Quantity 80.76 deg>, 't_0': <Quantity 3648. K>, 't_slab': <Quantity 7839. K>, 'n_e': <Quantity 1.e+13 1 / cm3>, 'tau': 1.03, 't_star': <Quantity 3400. K>, 'log_g_star': 3.5, 'd_star': <Quantity 1.25895645e+19 m>, 'av': 2.1, 'rv': 3.1, 'l_min': <Quantity 3000. Angstrom>, 'l_max': <Quantity 50000. Angstrom>, 'n_data': 420000, 'l_0': <Quantity 3000. Angstrom>, 'mag_comp': 'hslab', 'n_disk': 350, 'n_dust_disk': 50, 'n_h_minus': 5000, 'n_h': 5000, 'l_l_slab': <Quantity 3000. Angstrom>, 'save': False, 'save_each': False, 'save_grid_data': False, 'plot': False, 'verbose': False, 'bt_settl_path': '/home/arch/yso/BT_settl_models/npy_files', 'save_loc': '/home/arch/yso/validation_files/ysopy_outputs/fu_ori', 'h_grid_path': '/home/arch/yso/H_slab_test', 'h_min_grid_path': '/home/arch/yso/H_slab_grid_aug24/H_minus_flux'}
+INFO:__main__:Viscous disk done, time taken : 9.777063369750977
+INFO:__main__:Magnetic component done, time taken :2.9847311973571777
+INFO:__main__:Dust component done, time taken : 0.7783603668212891
+INFO:__main__:Photospheric component done, time taken 0.01216578483581543
