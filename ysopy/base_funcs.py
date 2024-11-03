@@ -13,13 +13,11 @@ from dust_extinction.parameter_averages import F19
 from dust_extinction.averages import G21_MWAvg
 # from configparser import ConfigParser
 import argparse
-# import time
-from utils import config_read
-from h_emission import get_h_intensity
-from h_minus_emission import get_h_minus_intensity
+import time
+from . import h_emission, utils, h_minus_emission
 
 from functools import cache
-# import logging
+import logging
 
 
 @cache
@@ -558,11 +556,9 @@ def generate_visc_flux(config, d: dict, t_max, dr, r_in=None):
             print("completed for temperature of", int_temp, "\nnumber of rings included:", len(radii))
         if save:
             np.save(f'{save_loc}/{int_temp}_flux.npy', temp_flux.value)
-            
     wavelength = np.logspace(np.log10(l_min.value), np.log10(l_max.value), n_data) * u.AA
     obs_viscous_disk_flux = viscous_disk_flux * np.cos(inclination) / (np.pi * d_star ** 2)
     obs_viscous_disk_flux = obs_viscous_disk_flux.to(u.erg / (u.cm ** 2 * u.s * u.AA))
-
     if save:
         np.save(f'{save_loc}/disk_component.npy', obs_viscous_disk_flux.value)
     if plot:
@@ -644,8 +640,8 @@ def magnetospheric_component_calculate(config, r_in):
 
     ###########################    HYDROGEN SLAB    #############################
     if config['mag_comp']=="hslab":
-        h_flux = get_h_intensity(config)
-        h_minus_flux = get_h_minus_intensity(config)
+        h_flux = h_emission.get_h_intensity(config)
+        h_minus_flux = h_minus_emission.get_h_minus_intensity(config)
         h_slab_flux = (h_flux + h_minus_flux) * u.sr
 
         # two wavelength regimes are used
@@ -1093,7 +1089,7 @@ def contribution(raw_args=None): ## check what this function does, move it to a 
     """find the contribution of the various annuli towards a particular line/group of lines
     """
     args = parse_args(raw_args)
-    config = config_read(args.ConfigfileLocation)
+    config = utils.config_read(args.ConfigfileLocation)
     dr, t_max, d, r_in, r_sub = generate_temp_arr(config)
     inclination = config['inclination']
     m = config['m']
@@ -1178,7 +1174,7 @@ def contribution(raw_args=None): ## check what this function does, move it to a 
         ax.plot(wavelength, fl, z, label=f'i = {i}')
     plt.show()
 
-'''
+
 def total_spec(dict_config):
 
     logger = logging.getLogger(__name__)
@@ -1216,7 +1212,7 @@ def main(raw_args=None):
 
     st = time.time()
     args = parse_args(raw_args)
-    dict_config = config_read(args.ConfigfileLocation)
+    dict_config = utils.config_read(args.ConfigfileLocation)
     dr, t_max, d, r_in, r_sub = generate_temp_arr(dict_config)
     # control line for planetesimal
     # garb1, garb2, d = generate_temp_arr_planet(dict_config, 2, 0.03, d)
@@ -1258,7 +1254,7 @@ def main(raw_args=None):
 
 
 def new_contribution(): # check what this function does. ideally, move it to a different file
-    config = config_read("config_file.das")
+    config = utils.config_read("config_file.das")
     dr, t_max, d, r_in, r_sub = generate_temp_arr(config)
 
     save_loc = config['save_loc']
@@ -1308,7 +1304,6 @@ def new_contribution(): # check what this function does. ideally, move it to a d
     plt.legend()
     plt.show()
 
-if __name__ == "__main__":
-    conf = config_read("config_file.cfg")
-    total_spec(conf)
-'''
+# if __name__ == "__main__":
+#     conf = utils.config_read("config_file.cfg")
+#     total_spec(conf)

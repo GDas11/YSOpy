@@ -3,7 +3,6 @@ from astropy.modeling.models import BlackBody
 import astropy.constants as const
 import astropy.units as u
 import os
-#from utils import config_read
 
 # define the constants
 c = const.c

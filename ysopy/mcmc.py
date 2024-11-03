@@ -8,16 +8,17 @@ from pypeit.core import wave
 import emcee
 from configparser import ConfigParser
 import matplotlib.pyplot as plt
-import time
+#import time
 
 from multiprocessing import Pool
 import os
 import logging
 
 os.environ["OMP_NUM_THREADS"] = "1"
+# np.seterr(all="ignore")
 logger = logging.getLogger(__name__)
 logging.basicConfig(filename='mcmc.log', encoding='utf-8', level=logging.DEBUG)
-np.seterr(all="ignore")
+
 
 def config_reader(filepath):
     """
@@ -59,7 +60,7 @@ def config_reader(filepath):
 
 def generate_initial_conditions(config_data,n_walkers):
 
-    np.random.seed(123456)
+    np.random.seed(32176)
     
     params = ['m', 'log_m_dot', 'b', 'inclination',  'log_n_e', 'r_star', 't_0', 't_slab', 'tau']
     initial_conditions = np.zeros((n_walkers, n_params))
@@ -81,7 +82,7 @@ def total_spec(theta,wavelength):
     returns normalized flux evaluated at the passed wavelength array
     """
 
-    t0 = time.time()
+    #t0 = time.time()
     # modify config file, to run model
     # params = ['m', 'log_m_dot', 'b', 'inclination',  'log_n_e', 'r_star', 't_0', 't_slab', 'tau']
     config = bf.config_read('config_file.cfg')
@@ -98,29 +99,29 @@ def total_spec(theta,wavelength):
     #run model
     dr, t_max, d, r_in, r_sub = bf.generate_temp_arr(config)
     wave, obs_viscous_disk_flux = bf.generate_visc_flux(config, d, t_max, dr)
-    t1 = time.time()
+    #t1 = time.time()
     obs_mag_flux = bf.magnetospheric_component_calculate(config, r_in)
-    t2 = time.time()
+    #t2 = time.time()
     obs_dust_flux = bf.generate_dusty_disk_flux(config, r_in, r_sub)
-    t3 = time.time()
+    #t3 = time.time()
     obs_star_flux = bf.generate_photosphere_flux(config)
-    t4 = time.time()
+    #t4 = time.time()
     total_flux = bf.dust_extinction_flux(config, wave, obs_viscous_disk_flux, obs_star_flux, obs_mag_flux, obs_dust_flux)
-    t5 = time.time()
+    #t5 = time.time()
 
     #interpolate to required wavelength
     func = interp1d(wave,total_flux)## CHECK if this works, for units
     result_spec = func(wavelength)
     result_spec /= np.median(result_spec)
 
-    logger.info(f"params {theta}")
-    logger.info(f"visc disk time : {t1-t0}")
-    logger.info(f"magnetosphere time : {t2-t1}")
-    logger.info(f"dust disk time : {t3-t2}")
-    logger.info(f"photosphere time : {t4-t3}")
-    logger.info(f"model run .. time taken {t5 - t0} s,\n params {str(theta)}")
+    #logger.info(f"params {theta}")
+    #logger.info(f"visc disk time : {t1-t0}")
+    #logger.info(f"magnetosphere time : {t2-t1}")
+    #logger.info(f"dust disk time : {t3-t2}")
+    #logger.info(f"photosphere time : {t4-t3}")
+    #logger.info(f"model run .. time taken {t5 - t0} s,\n params {str(theta)}")
 
-    print(f"model run ..") #time taken {t5 - t0} s")
+    #print(f"model run .. time taken {t5 - t0} s")
 
     return result_spec
 
@@ -143,7 +144,7 @@ def log_prior(theta):
     return -np.inf
 
 
-def log_likelihood(theta):
+def log_likelihood(theta,data):
     #y is of the form (wavelength,normalized_flux,normalized_err), where normalization is by the median flux
     wavelength = data[0]*u.AA
     model = total_spec(theta,wavelength)
@@ -151,56 +152,55 @@ def log_likelihood(theta):
     return -0.5 *( np.sum((data[1] - model) ** 2 / sigma2 + np.log(sigma2)) )
 
 
-def log_probability(theta): # gives the posterior probability
+def log_probability(theta, data):  # gives the posterior probability
     lp = log_prior(theta)
     if not np.isfinite(lp):
         return -np.inf
-    return lp + log_likelihood(theta)
+    return lp + log_likelihood(theta,data)
 
 
-def main(p0,nwalkers,niter,ndim,lnprob):
+def main(p0,nwalkers,niter,ndim,lnprob,data):
 
-    print("trial4 :Running...")
-    #start = time.time()
+    print("Running mcmc...")
     with Pool(processes=8) as pool:
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool)
+        sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, pool=pool, args=[data,])
         sampler.run_mcmc(p0, niter, progress=True)
-    #end = time.time()
-    #multi_time = end - start
+    
     #print("single core took {0:.1f} seconds".format(multi_time))
     #print("Multiprocessing took {0:.1f} seconds".format(multi_time))
-    
+
     # get the chain
     print("getting chain ... ")
     params = sampler.get_chain()
 
     return params
-
+"""
 # read data for Marvin
-# path_to_valid = "../../FU_ori_HIRES/"
-# data = ascii.read(path_to_valid+'KOA_42767/HIRES/extracted/tbl/ccd0/flux/HI.20030211.26428_0_02_flux.tbl.gz')
+path_to_valid = "../../v960mon/"
+data = ascii.read(path_to_valid+'KOA_93088/HIRES/extracted/tbl/ccd1/flux/HI.20141209.56999_1_04_flux.tbl.gz')
 
-#read the data
-path_to_valid = "../../../../validation_files/"
-data = ascii.read(path_to_valid+'HIRES_sci_42767_1/KOA_42767/HIRES/extracted/tbl/ccd0/flux/HI.20030211.26428_0_02_flux.tbl.gz')
+# read data for my pc
+# path_to_valid = "../../../../validation_files/"
+# data = ascii.read(path_to_valid+'HIRES_sci_42767_1/KOA_42767/HIRES/extracted/tbl/ccd0/flux/HI.20030211.26428_0_02_flux.tbl.gz')
+
 data = [data['wave'],data['Flux']/np.median(data['Flux']),data['Error']/np.median(data['Flux'])]
 #vac to air correction for given data
 wavelengths_air = wave.vactoair(data[0]*u.AA)
 data[0] = wavelengths_air
 
-plt.plot(data[0],data[1])
-plt.show()
+#plt.plot(data[0],data[1])
+#plt.show()
 
 n_params = 9 # number of parameters that are varying
-nwalkers = 18
-niter = 200
+nwalkers = 18 
+niter = 300
 
-#check time for a single run
-# theta_single = [ 5.03197142e-01, -4.03054252e+00,  9.68469043e-01 , 1.20689315e+01,
-#   1.26199606e+01,  1.81237601e+00,  3.82239928e+03 , 7.06072326e+03,
-#   1.01185058e+00]
-# logger.info("Single spec run")
-# total_spec(theta_single, data[0]*u.AA)
+# check time for a single run
+#theta_single = [ 9.07512872e-01, -5.52898504e+00,  9.54918486e-01,  8.07599932e+01,
+#  1.19549089e+01,  1.81773937e+00,  3.64877939e+03,  7.83981861e+03,
+#  1.05022562e+00]
+#logger.info("Single spec run")
+#total_spec(theta_single, data[0]*u.AA)
 
 
 # generate initial conditions
@@ -211,3 +211,39 @@ params = main(p0,nwalkers,niter,n_params,log_probability)
 np.save("params_1.npy",params)
 
 print("completed")
+"""
+if __name__ == "__main__":
+    path_to_valid = "../../v960mon/"
+    data = ascii.read(path_to_valid + 'KOA_93088/HIRES/extracted/tbl/ccd1/flux/HI.20141209.56999_1_04_flux.tbl.gz')
+
+    # read data for my pc
+    # path_to_valid = "../../../../validation_files/"
+    # data = ascii.read(path_to_valid+'HIRES_sci_42767_1/KOA_42767/HIRES/extracted/tbl/ccd0/flux/HI.20030211.26428_0_02_flux.tbl.gz')
+
+    data = [data['wave'], data['Flux'] / np.median(data['Flux']), data['Error'] / np.median(data['Flux'])]
+    # vac to air correction for given data
+    wavelengths_air = wave.vactoair(data[0] * u.AA)
+    data[0] = wavelengths_air
+
+    # plt.plot(data[0],data[1])
+    # plt.show()
+
+    n_params = 9  # number of parameters that are varying
+    nwalkers = 18
+    niter = 300
+
+    # check time for a single run
+    # theta_single = [ 9.07512872e-01, -5.52898504e+00,  9.54918486e-01,  8.07599932e+01,
+    #  1.19549089e+01,  1.81773937e+00,  3.64877939e+03,  7.83981861e+03,
+    #  1.05022562e+00]
+    # logger.info("Single spec run")
+    # total_spec(theta_single, data[0]*u.AA)
+
+    # generate initial conditions
+    config_data = config_reader('mcmc_config.cfg')
+    p0 = generate_initial_conditions(config_data, nwalkers)
+
+    params = main(p0, nwalkers, niter, n_params, log_probability,data)
+    np.save("params_1.npy", params)
+
+    print("completed")

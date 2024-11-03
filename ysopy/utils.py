@@ -1,9 +1,7 @@
 from configparser import ConfigParser
 import astropy.units as u
 import astropy.constants as const
-from functools import cache
 
-@cache
 def config_read(path):
     """Read data from config file and cast to expected data types
 
@@ -19,7 +17,7 @@ def config_read(path):
     """
     config = ConfigParser()
     config.read(path)
-    config_data = config['Parameters']
+    config_data = config["Parameters"]
     dict_config = dict(config_data)
 
     # convert to the required astropy units
