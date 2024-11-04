@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import interp1d
-import base_funcs as bf
+from ysopy import base_funcs as bf
 import astropy.constants as const
 import astropy.units as u
 from astropy.io import ascii
@@ -8,8 +8,8 @@ from pypeit.core import wave
 import emcee
 from configparser import ConfigParser
 import matplotlib.pyplot as plt
-#import time
-
+import time
+from ysopy import utils
 from multiprocessing import Pool
 import os
 import logging
@@ -60,7 +60,7 @@ def config_reader(filepath):
 
 def generate_initial_conditions(config_data,n_walkers):
 
-    np.random.seed(32176)
+    # np.random.seed(32176)
     
     params = ['m', 'log_m_dot', 'b', 'inclination',  'log_n_e', 'r_star', 't_0', 't_slab', 'tau']
     initial_conditions = np.zeros((n_walkers, n_params))
@@ -82,10 +82,10 @@ def total_spec(theta,wavelength):
     returns normalized flux evaluated at the passed wavelength array
     """
 
-    #t0 = time.time()
+    t0 = time.time()
     # modify config file, to run model
     # params = ['m', 'log_m_dot', 'b', 'inclination',  'log_n_e', 'r_star', 't_0', 't_slab', 'tau']
-    config = bf.config_read('config_file.cfg')
+    config = utils.config_read('ysopy/config_file.cfg')
     config['m'] = theta[0] * const.M_sun
     config['m_dot'] = 10**theta[1] * const.M_sun / (1 * u.year).to(u.s) ## Ensure the 10** here
     config['b'] = theta[2] * u.kilogauss
@@ -99,27 +99,27 @@ def total_spec(theta,wavelength):
     #run model
     dr, t_max, d, r_in, r_sub = bf.generate_temp_arr(config)
     wave, obs_viscous_disk_flux = bf.generate_visc_flux(config, d, t_max, dr)
-    #t1 = time.time()
+    t1 = time.time()
     obs_mag_flux = bf.magnetospheric_component_calculate(config, r_in)
-    #t2 = time.time()
+    t2 = time.time()
     obs_dust_flux = bf.generate_dusty_disk_flux(config, r_in, r_sub)
-    #t3 = time.time()
+    t3 = time.time()
     obs_star_flux = bf.generate_photosphere_flux(config)
-    #t4 = time.time()
+    t4 = time.time()
     total_flux = bf.dust_extinction_flux(config, wave, obs_viscous_disk_flux, obs_star_flux, obs_mag_flux, obs_dust_flux)
-    #t5 = time.time()
+    t5 = time.time()
 
     #interpolate to required wavelength
     func = interp1d(wave,total_flux)## CHECK if this works, for units
     result_spec = func(wavelength)
     result_spec /= np.median(result_spec)
 
-    #logger.info(f"params {theta}")
-    #logger.info(f"visc disk time : {t1-t0}")
-    #logger.info(f"magnetosphere time : {t2-t1}")
-    #logger.info(f"dust disk time : {t3-t2}")
-    #logger.info(f"photosphere time : {t4-t3}")
-    #logger.info(f"model run .. time taken {t5 - t0} s,\n params {str(theta)}")
+    logger.info(f"params {theta}")
+    logger.info(f"visc disk time : {t1-t0}")
+    logger.info(f"magnetosphere time : {t2-t1}")
+    logger.info(f"dust disk time : {t3-t2}")
+    logger.info(f"photosphere time : {t4-t3}")
+    logger.info(f"model run .. time taken {t5 - t0} s,\n params {str(theta)}")
 
     #print(f"model run .. time taken {t5 - t0} s")
 
@@ -213,7 +213,7 @@ np.save("params_1.npy",params)
 print("completed")
 """
 if __name__ == "__main__":
-    path_to_valid = "../../v960mon/"
+    path_to_valid = "/Users/tusharkantidas/github/YSOPY_newcodes/v960mon/"
     data = ascii.read(path_to_valid + 'KOA_93088/HIRES/extracted/tbl/ccd1/flux/HI.20141209.56999_1_04_flux.tbl.gz')
 
     # read data for my pc
@@ -230,7 +230,7 @@ if __name__ == "__main__":
 
     n_params = 9  # number of parameters that are varying
     nwalkers = 18
-    niter = 300
+    niter = 200
 
     # check time for a single run
     # theta_single = [ 9.07512872e-01, -5.52898504e+00,  9.54918486e-01,  8.07599932e+01,
